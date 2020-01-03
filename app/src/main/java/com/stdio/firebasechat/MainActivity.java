@@ -44,6 +44,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
@@ -196,6 +197,10 @@ public class MainActivity extends AppCompatActivity
                                             String downloadUrl = task.getResult().toString();
                                             Glide.with(viewHolder.messageImageView.getContext())
                                                     .load(downloadUrl)
+                                                    .apply(new RequestOptions()
+                                                            .placeholder(R.drawable.progress_animation)
+                                                            .dontAnimate()
+                                                            .dontTransform())
                                                     .into(viewHolder.messageImageView);
                                         } else {
                                             Log.w(TAG, "Getting download url was not successful.",
@@ -206,6 +211,10 @@ public class MainActivity extends AppCompatActivity
                     } else {
                         Glide.with(viewHolder.messageImageView.getContext())
                                 .load(friendlyMessage.getImageUrl())
+                                .apply(new RequestOptions()
+                                        .placeholder(R.drawable.progress_animation)
+                                        .dontAnimate()
+                                        .dontTransform())
                                 .into(viewHolder.messageImageView);
                     }
                     viewHolder.messageImageView.setVisibility(ImageView.VISIBLE);
