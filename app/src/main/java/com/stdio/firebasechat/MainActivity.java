@@ -32,6 +32,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -74,17 +75,21 @@ public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.OnConnectionFailedListener {
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
-        TextView messageTextView;
-        ImageView messageImageView;
-        TextView messengerTextView;
-        CircleImageView messengerImageView;
+        TextView tvMessage;
+        TextView tvMessageLeft;
+        FrameLayout flMessage, flMessageLeft, flImageLayout, flImageLayoutLeft;
+        ImageView messageImageView, messageImageViewLeft;
 
         public MessageViewHolder(View v) {
             super(v);
-            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
-            messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
-            messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
+            tvMessage = itemView.findViewById(R.id.textMessage);
+            tvMessageLeft = itemView.findViewById(R.id.textMessageLeft);
+            flMessage = itemView.findViewById(R.id.flMessage);
+            flMessageLeft = itemView.findViewById(R.id.flMessageLeft);
+            flImageLayout = itemView.findViewById(R.id.imageLayout);
+            flImageLayoutLeft = itemView.findViewById(R.id.imageLayoutLeft);
+            messageImageView = itemView.findViewById(R.id.imageView);
+            messageImageViewLeft = itemView.findViewById(R.id.imageViewLeft);
         }
     }
 
@@ -169,9 +174,8 @@ public class MainActivity extends AppCompatActivity
                                             int position,
                                             FriendlyMessage friendlyMessage) {
                 if (friendlyMessage.getText() != null) {
-                    viewHolder.messageTextView.setText(friendlyMessage.getText());
-                    viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
-                    viewHolder.messageImageView.setVisibility(ImageView.GONE);
+                    viewHolder.flMessage.setVisibility(View.VISIBLE);
+                    viewHolder.tvMessage.setText(friendlyMessage.getText());
                 } else if (friendlyMessage.getImageUrl() != null) {
                     String imageUrl = friendlyMessage.getImageUrl();
                     if (imageUrl.startsWith("gs://")) {
@@ -205,12 +209,12 @@ public class MainActivity extends AppCompatActivity
                                         .dontTransform())
                                 .into(viewHolder.messageImageView);
                     }
-                    viewHolder.messageImageView.setVisibility(ImageView.VISIBLE);
-                    viewHolder.messageTextView.setVisibility(TextView.GONE);
+                    viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
+                    viewHolder.flMessage.setVisibility(TextView.GONE);
                 }
 
 
-                viewHolder.messengerTextView.setText(friendlyMessage.getName());
+                /*viewHolder.messengerTextView.setText(friendlyMessage.getName());
                 if (friendlyMessage.getPhotoUrl() == null) {
                     viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                             R.drawable.ic_account_circle_black_36dp));
@@ -218,8 +222,19 @@ public class MainActivity extends AppCompatActivity
                     Glide.with(MainActivity.this)
                             .load(friendlyMessage.getPhotoUrl())
                             .into(viewHolder.messengerImageView);
-                }
+                }*/
 
+            }
+
+            // override getItemId and getItemViewType to fix "RecyclerView items duplicate and constantly changing"
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public int getItemViewType(int position) {
+                return position;
             }
         };
 
