@@ -132,6 +132,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
             @Override
             protected void onBindViewHolder(final MessageViewHolder viewHolder, int position, FriendlyMessage friendlyMessage) {
+                final RequestOptions requestOptions = new RequestOptions()
+                        .placeholder(R.drawable.progress_animation)
+                        .dontAnimate()
+                        .dontTransform();
                 if (friendlyMessage.getText() != null) {
                     viewHolder.flMessage.setVisibility(View.VISIBLE);
                     viewHolder.tvMessage.setText(friendlyMessage.getText());
@@ -148,10 +152,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                             String downloadUrl = task.getResult().toString();
                                             Glide.with(viewHolder.messageImageView.getContext())
                                                     .load(downloadUrl)
-                                                    .apply(new RequestOptions()
-                                                            .placeholder(R.drawable.progress_animation)
-                                                            .dontAnimate()
-                                                            .dontTransform())
+                                                    .apply(requestOptions)
                                                     .into(viewHolder.messageImageView);
                                         } else {
                                             Log.w(TAG, "Getting download url was not successful.",
@@ -162,10 +163,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     } else {
                         Glide.with(viewHolder.messageImageView.getContext())
                                 .load(friendlyMessage.getImageUrl())
-                                .apply(new RequestOptions()
-                                        .placeholder(R.drawable.progress_animation)
-                                        .dontAnimate()
-                                        .dontTransform())
+                                .apply(requestOptions)
                                 .into(viewHolder.messageImageView);
                     }
                     viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
@@ -249,34 +247,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         super.onActivityResult(requestCode, resultCode, data);
         Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
 
-        if (requestCode == REQUEST_IMAGE) {
-            if (resultCode == RESULT_OK) {
-                if (data != null) {
-                    final Uri uri = data.getData();
-                    Log.d(TAG, "Uri: " + uri.toString());
+        if (resultCode == RESULT_OK && requestCode == REQUEST_IMAGE) {
+            if (data != null) {
+                final Uri uri = data.getData();
+                Log.d(TAG, "Uri: " + uri.toString());
 
-                    FriendlyMessage tempMessage = new FriendlyMessage(null, mUsername, mPhotoUrl,
-                            LOADING_IMAGE_URL);
-                    mFirebaseDatabaseReference.child(MESSAGES_CHILD).push()
-                            .setValue(tempMessage, new DatabaseReference.CompletionListener() {
-                                @Override
-                                public void onComplete(DatabaseError databaseError,
-                                                       DatabaseReference databaseReference) {
-                                    if (databaseError == null) {
-                                        String key = databaseReference.getKey();
-                                        StorageReference storageReference = FirebaseStorage.getInstance()
-                                                .getReference(mFirebaseUser.getUid())
-                                                .child(key)
-                                                .child(uri.getLastPathSegment());
+                FriendlyMessage tempMessage = new FriendlyMessage(null, mUsername, mPhotoUrl,
+                        LOADING_IMAGE_URL);
+                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push()
+                        .setValue(tempMessage, new DatabaseReference.CompletionListener() {
+                            @Override
+                            public void onComplete(DatabaseError databaseError,
+                                                   DatabaseReference databaseReference) {
+                                if (databaseError == null) {
+                                    String key = databaseReference.getKey();
+                                    StorageReference storageReference = FirebaseStorage.getInstance()
+                                            .getReference(mFirebaseUser.getUid())
+                                            .child(key)
+                                            .child(uri.getLastPathSegment());
 
-                                        putImageInStorage(storageReference, uri, key);
-                                    } else {
-                                        Log.w(TAG, "Unable to write message to database.",
-                                                databaseError.toException());
-                                    }
+                                    putImageInStorage(storageReference, uri, key);
+                                } else {
+                                    Log.w(TAG, "Unable to write message to database.",
+                                            databaseError.toException());
                                 }
-                            });
-                }
+                            }
+                        });
             }
         }
     }
