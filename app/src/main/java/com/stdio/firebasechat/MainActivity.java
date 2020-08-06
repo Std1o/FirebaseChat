@@ -52,8 +52,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     private FirebaseUser mFirebaseUser;
     private DatabaseReference mFirebaseDatabaseReference;
-    private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>
-            mFirebaseAdapter;
+    private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
         if (mFirebaseUser == null) {
-            // Not signed in, launch the Sign In activity
             startActivity(new Intent(this, SignInActivity.class));
             finish();
             return;
@@ -77,12 +75,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
             }
         }
-
-        mMessageRecyclerView = findViewById(R.id.rvChat);
-        mLinearLayoutManager = new LinearLayoutManager(this);
-        mLinearLayoutManager.setStackFromEnd(true);
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-
+        initRV();
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
             @Override
@@ -99,6 +92,38 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         FirebaseRecyclerOptions<FriendlyMessage> options = new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
                 .setQuery(messagesRef, parser)
                 .build();
+        initFirebaseAdapter(options);
+
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition =
+                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the
+                // user is at the bottom of the list, scroll to the bottom
+                // of the list to show the newly added message.
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (friendlyMessageCount - 1) &&
+                                lastVisiblePosition == (positionStart - 1))) {
+                    mMessageRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
+        mMessageEditText = findViewById(R.id.messageEditText);
+    }
+
+    private void initRV() {
+        mMessageRecyclerView = findViewById(R.id.rvChat);
+        mLinearLayoutManager = new LinearLayoutManager(this);
+        mLinearLayoutManager.setStackFromEnd(true);
+        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+    }
+
+    private void initFirebaseAdapter(FirebaseRecyclerOptions<FriendlyMessage> options) {
         mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
             @Override
             public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
@@ -172,27 +197,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 return position;
             }
         };
-
-        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition =
-                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                // If the recycler view is initially being loaded or the
-                // user is at the bottom of the list, scroll to the bottom
-                // of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                        (positionStart >= (friendlyMessageCount - 1) &&
-                                lastVisiblePosition == (positionStart - 1))) {
-                    mMessageRecyclerView.scrollToPosition(positionStart);
-                }
-            }
-        });
-
-        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
-        mMessageEditText = findViewById(R.id.messageEditText);
     }
 
     public void onClick(View view) {
