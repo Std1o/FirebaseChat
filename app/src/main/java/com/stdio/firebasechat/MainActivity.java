@@ -45,11 +45,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     public static final String ANONYMOUS = "anonymous";
     private String mUsername;
     private String mPhotoUrl;
-
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private EditText mMessageEditText;
-
     private FirebaseUser mFirebaseUser;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
@@ -61,20 +59,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         // Set default username is anonymous.
         mUsername = ANONYMOUS;
 
-        // Initialize Firebase Auth
-        // Firebase instance variables
-        FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
-        mFirebaseUser = mFirebaseAuth.getCurrentUser();
-        if (mFirebaseUser == null) {
-            startActivity(new Intent(this, SignInActivity.class));
-            finish();
-            return;
-        } else {
-            mUsername = mFirebaseUser.getDisplayName();
-            if (mFirebaseUser.getPhotoUrl() != null) {
-                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
-            }
-        }
+        auth();
         initRV();
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
@@ -99,8 +84,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
                 int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition =
-                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the
                 // user is at the bottom of the list, scroll to the bottom
                 // of the list to show the newly added message.
@@ -114,6 +98,21 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
         mMessageEditText = findViewById(R.id.messageEditText);
+    }
+
+    private void auth() {
+        FirebaseAuth mFirebaseAuth = FirebaseAuth.getInstance();
+        mFirebaseUser = mFirebaseAuth.getCurrentUser();
+        if (mFirebaseUser == null) {
+            startActivity(new Intent(this, SignInActivity.class));
+            finish();
+            return;
+        } else {
+            mUsername = mFirebaseUser.getDisplayName();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            }
+        }
     }
 
     private void initRV() {
