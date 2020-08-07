@@ -141,31 +141,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     viewHolder.tvMessage.setText(friendlyMessage.getText());
                 } else if (friendlyMessage.getImageUrl() != null) {
                     String imageUrl = friendlyMessage.getImageUrl();
-                    if (imageUrl.startsWith("gs://")) {
-                        StorageReference storageReference = FirebaseStorage.getInstance()
-                                .getReferenceFromUrl(imageUrl);
-                        storageReference.getDownloadUrl().addOnCompleteListener(
-                                new OnCompleteListener<Uri>() {
-                                    @Override
-                                    public void onComplete(@NonNull Task<Uri> task) {
-                                        if (task.isSuccessful()) {
-                                            String downloadUrl = task.getResult().toString();
-                                            Glide.with(viewHolder.messageImageView.getContext())
-                                                    .load(downloadUrl)
-                                                    .apply(requestOptions)
-                                                    .into(viewHolder.messageImageView);
-                                        } else {
-                                            Log.w(TAG, "Getting download url was not successful.",
-                                                    task.getException());
-                                        }
-                                    }
-                                });
-                    } else {
-                        Glide.with(viewHolder.messageImageView.getContext())
-                                .load(friendlyMessage.getImageUrl())
-                                .apply(requestOptions)
-                                .into(viewHolder.messageImageView);
-                    }
+                    Glide.with(viewHolder.messageImageView.getContext())
+                            .load(friendlyMessage.getImageUrl())
+                            .apply(requestOptions)
+                            .into(viewHolder.messageImageView);
                     viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
                     viewHolder.flMessage.setVisibility(TextView.GONE);
                 }
