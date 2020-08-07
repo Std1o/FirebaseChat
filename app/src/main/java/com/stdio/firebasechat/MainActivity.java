@@ -1,5 +1,8 @@
 package com.stdio.firebasechat;
 
+import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -33,6 +36,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
@@ -51,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private FirebaseUser mFirebaseUser;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
+    ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -256,8 +261,37 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         }
     }
 
+    private void showProgressDialog(final String key, final UploadTask uploadTask) {
+        dialog = new ProgressDialog(this);
+        dialog.setTitle("Загрузка изображения...");
+        dialog.setCancelable(false);
+        dialog.setButton(Dialog.BUTTON_POSITIVE, "Отмена", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key).removeValue();
+                uploadTask.cancel();
+            }
+        });
+        dialog.show();
+    }
+
     private void putImageInStorage(StorageReference storageReference, Uri uri, final String key) {
-        storageReference.putFile(uri).addOnCompleteListener(MainActivity.this,
+        final UploadTask uploadTask = storageReference.putFile(uri);
+        showProgressDialog(key, uploadTask);
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
+                final double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
+                Log.i("Load","Upload is " + String.format("%.1f", progress) + "% done");
+                Runnable changeMessage = new Runnable() {
+                    @Override
+                    public void run() {
+                        //Log.v(TAG, strCharacters);
+                        dialog.setMessage(String.format("%.1f", progress) + "% done");
+                    }
+                };
+                runOnUiThread(changeMessage);
+            }
+        }).addOnCompleteListener(this,
                 new OnCompleteListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
@@ -273,6 +307,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                                                         task.getResult().toString());
                                                         mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key)
                                                                 .setValue(friendlyMessage);
+                                                        dialog.cancel();
                                                     }
                                                 }
                                             });
