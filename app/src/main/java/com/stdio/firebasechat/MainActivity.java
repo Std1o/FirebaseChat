@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
     private static final int REQUEST_IMAGE = 2;
-    private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
+    private static final String LOADING_IMAGE_URL = "https://i.ibb.co/QM8XrF2/placeholder.jpg";
     public static final String ANONYMOUS = "anonymous";
     private String mUsername;
     private String mPhotoUrl;
