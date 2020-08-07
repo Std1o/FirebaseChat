@@ -145,9 +145,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     viewHolder.flMessage.setVisibility(View.VISIBLE);
                     viewHolder.tvMessage.setText(friendlyMessage.getText());
                 } else if (friendlyMessage.getImageUrl() != null) {
-                    String imageUrl = friendlyMessage.getImageUrl();
+                    boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
                     Glide.with(viewHolder.messageImageView.getContext())
-                            .load(friendlyMessage.getImageUrl())
+                            .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
                             .apply(requestOptions)
                             .into(viewHolder.messageImageView);
                     viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
@@ -318,5 +318,4 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     }
                 });
     }
-
 }
