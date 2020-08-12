@@ -141,17 +141,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         .placeholder(R.drawable.progress_animation)
                         .dontAnimate()
                         .dontTransform();
+                hideAllItemLayouts(viewHolder);
                 if (friendlyMessage.getText() != null) {
-                    viewHolder.flMessage.setVisibility(View.VISIBLE);
-                    viewHolder.tvMessage.setText(friendlyMessage.getText());
+                    if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
+                        viewHolder.flMessage.setVisibility(TextView.VISIBLE);
+                        viewHolder.tvMessage.setText(friendlyMessage.getText());
+                    }
+                    else {
+                        viewHolder.flMessageLeft.setVisibility(TextView.VISIBLE);
+                        viewHolder.tvMessageLeft.setText(friendlyMessage.getText());
+                    }
                 } else if (friendlyMessage.getImageUrl() != null) {
                     boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
-                    Glide.with(viewHolder.messageImageView.getContext())
-                            .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
-                            .apply(requestOptions)
-                            .into(viewHolder.messageImageView);
-                    viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
-                    viewHolder.flMessage.setVisibility(TextView.GONE);
+                    if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
+                        Glide.with(viewHolder.messageImageView.getContext())
+                                .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
+                                .apply(requestOptions)
+                                .into(viewHolder.messageImageView);
+                        viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
+                    }
+                    else {
+                        Glide.with(viewHolder.messageImageView.getContext())
+                                .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
+                                .apply(requestOptions)
+                                .into(viewHolder.messageImageViewLeft);
+                        viewHolder.flImageLayoutLeft.setVisibility(ImageView.VISIBLE);
+                    }
                 }
 
 
@@ -180,6 +195,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         };
     }
 
+    private void hideAllItemLayouts(MessageViewHolder viewHolder) {
+        viewHolder.flImageLayoutLeft.setVisibility(ImageView.GONE);
+        viewHolder.flImageLayout.setVisibility(ImageView.GONE);
+        viewHolder.flMessage.setVisibility(TextView.GONE);
+        viewHolder.flMessageLeft.setVisibility(TextView.GONE);
+    }
+
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.leftBtn:
@@ -199,6 +221,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                             mUsername,
                             mPhotoUrl,
                             null /* no image */);
+                    friendlyMessage.setUid(mFirebaseUser.getUid());
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
                     mMessageEditText.setText("");
                 }
@@ -238,6 +261,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
                 FriendlyMessage tempMessage = new FriendlyMessage(null, mUsername, mPhotoUrl,
                         LOADING_IMAGE_URL);
+                tempMessage.setUid(mFirebaseUser.getUid());
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push()
                         .setValue(tempMessage, new DatabaseReference.CompletionListener() {
                             @Override
@@ -305,6 +329,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                                         FriendlyMessage friendlyMessage =
                                                                 new FriendlyMessage(null, mUsername, mPhotoUrl,
                                                                         task.getResult().toString());
+                                                        friendlyMessage.setUid(mFirebaseUser.getUid());
                                                         mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key)
                                                                 .setValue(friendlyMessage);
                                                         dialog.cancel();
