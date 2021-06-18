@@ -2,6 +2,7 @@ package com.stdio.firebasechat;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,7 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
 
     FirebaseRecyclerOptions<FriendlyMessage> options;
     FirebaseUser mFirebaseUser;
+    int highlightPosition = -1;
 
     public FirebaseRVAdapter(FirebaseRecyclerOptions<FriendlyMessage> options, FirebaseUser mFirebaseUser) {
         super(options);
@@ -46,6 +48,17 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                 .dontAnimate()
                 .dontTransform();
         hideAllItemLayouts(viewHolder);
+        if (highlightPosition == position) {
+            viewHolder.selectedView.setVisibility(View.VISIBLE);
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    viewHolder.selectedView.setVisibility(View.GONE);
+                    viewHolder.selectedView.animate().alpha(0.0f).setDuration(500);
+                    highlightPosition = -1;
+                }
+            }, 1000);
+        }
         if (friendlyMessage.getText() != null) {
             if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
                 viewHolder.flMessage.setVisibility(TextView.VISIBLE);
@@ -53,6 +66,13 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                 if (friendlyMessage.getForwardedMessage() != null) {
                     showForwardedMessage(viewHolder, friendlyMessage);
                 }
+                viewHolder.replyLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        MainActivity.mMessageRecyclerView.smoothScrollToPosition(friendlyMessage.getForwardedMessagePosition());
+                        highlightPosition = friendlyMessage.getForwardedMessagePosition();
+                    }
+                });
             }
             else {
                 viewHolder.flMessageLeft.setVisibility(TextView.VISIBLE);

@@ -13,6 +13,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
     TextView tvMessageLeft;
     FrameLayout flMessage, flMessageLeft, flImageLayout, flImageLayoutLeft;
     ImageView messageImageView, messageImageViewLeft;
+    View selectedView;
     RelativeLayout replyLayout;
     TextView txtQuotedMsg, tvSender;
     ImageView ivQuotedMsg;
@@ -30,6 +31,7 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
         flImageLayoutLeft = itemView.findViewById(R.id.imageLayoutLeft);
         messageImageView = itemView.findViewById(R.id.imageView);
         messageImageViewLeft = itemView.findViewById(R.id.imageViewLeft);
+        selectedView = itemView.findViewById(R.id.selectedView);
 
         replyLayout = itemView.findViewById(R.id.replyLayout);
         txtQuotedMsg = itemView.findViewById(R.id.txtQuotedMsg);

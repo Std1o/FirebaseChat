@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     public static final String ANONYMOUS = "anonymous";
     private String mUsername;
     private String mPhotoUrl;
-    private RecyclerView mMessageRecyclerView;
+    public static RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private EditText mMessageEditText;
     private FirebaseUser mFirebaseUser;
