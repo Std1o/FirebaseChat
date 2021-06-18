@@ -125,12 +125,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                 startActivityForResult(intent, REQUEST_IMAGE);
                 break;
             case R.id.sendButton:
-                if (!mMessageEditText.getText().toString().isEmpty()) {
+                String message = mMessageEditText.getText().toString();
+                message = message.trim();
+                message = message.replaceAll("^\\n+|\\n+$", "");
+                if (!message.isEmpty()) {
                     FriendlyMessage friendlyMessage = new
-                            FriendlyMessage(mMessageEditText.getText().toString(),
-                            mUsername,
-                            mPhotoUrl,
-                            null /* no image */);
+                            FriendlyMessage(message, mUsername, mPhotoUrl, null);
                     friendlyMessage.setUid(mFirebaseUser.getUid());
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
                     mMessageEditText.setText("");
