@@ -40,12 +40,13 @@ import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import static com.stdio.firebasechat.Constants.LOADING_IMAGE_URL;
+
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
     private static final int REQUEST_IMAGE = 2;
-    private static final String LOADING_IMAGE_URL = "https://i.ibb.co/QM8XrF2/placeholder.jpg";
     public static final String ANONYMOUS = "anonymous";
     private String mUsername;
     private String mPhotoUrl;
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         FirebaseRecyclerOptions<FriendlyMessage> options = new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
                 .setQuery(messagesRef, parser)
                 .build();
-        initFirebaseAdapter(options);
+        mFirebaseAdapter = new FirebaseRVAdapter(options, mFirebaseUser);
 
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -125,81 +126,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-    }
-
-    private void initFirebaseAdapter(FirebaseRecyclerOptions<FriendlyMessage> options) {
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
-            @Override
-            public MessageViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
-                LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new MessageViewHolder(inflater.inflate(R.layout.item_message, viewGroup, false));
-            }
-
-            @Override
-            protected void onBindViewHolder(final MessageViewHolder viewHolder, int position, FriendlyMessage friendlyMessage) {
-                final RequestOptions requestOptions = new RequestOptions()
-                        .placeholder(R.drawable.progress_animation)
-                        .dontAnimate()
-                        .dontTransform();
-                hideAllItemLayouts(viewHolder);
-                if (friendlyMessage.getText() != null) {
-                    if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
-                        viewHolder.flMessage.setVisibility(TextView.VISIBLE);
-                        viewHolder.tvMessage.setText(friendlyMessage.getText());
-                    }
-                    else {
-                        viewHolder.flMessageLeft.setVisibility(TextView.VISIBLE);
-                        viewHolder.tvMessageLeft.setText(friendlyMessage.getText());
-                    }
-                } else if (friendlyMessage.getImageUrl() != null) {
-                    boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
-                    if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
-                        Glide.with(viewHolder.messageImageView.getContext())
-                                .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
-                                .apply(requestOptions)
-                                .into(viewHolder.messageImageView);
-                        viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
-                    }
-                    else {
-                        Glide.with(viewHolder.messageImageView.getContext())
-                                .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
-                                .apply(requestOptions)
-                                .into(viewHolder.messageImageViewLeft);
-                        viewHolder.flImageLayoutLeft.setVisibility(ImageView.VISIBLE);
-                    }
-                }
-
-
-                /*viewHolder.messengerTextView.setText(friendlyMessage.getName());
-                if (friendlyMessage.getPhotoUrl() == null) {
-                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
-                            R.drawable.ic_account_circle_black_36dp));
-                } else {
-                    Glide.with(MainActivity.this)
-                            .load(friendlyMessage.getPhotoUrl())
-                            .into(viewHolder.messengerImageView);
-                }*/
-
-            }
-
-            // override getItemId and getItemViewType to fix "RecyclerView items duplicate and constantly changing"
-            @Override
-            public long getItemId(int position) {
-                return position;
-            }
-
-            @Override
-            public int getItemViewType(int position) {
-                return position;
-            }
-        };
-    }
-
-    private void hideAllItemLayouts(MessageViewHolder viewHolder) {
-        viewHolder.flImageLayoutLeft.setVisibility(ImageView.GONE);
-        viewHolder.flImageLayout.setVisibility(ImageView.GONE);
-        viewHolder.flMessage.setVisibility(TextView.GONE);
-        viewHolder.flMessageLeft.setVisibility(TextView.GONE);
     }
 
     public void onClick(View view) {
