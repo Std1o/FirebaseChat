@@ -6,11 +6,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+import com.capybaralabs.swipetoreply.ISwipeControllerActions;
+import com.capybaralabs.swipetoreply.SwipeController;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
@@ -41,11 +49,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private FirebaseUser mFirebaseUser;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
+    RelativeLayout replyLayout;
+    TextView txtQuotedMsg, tvSender;
+    ImageView ivQuotedMsg;
+    private boolean messageIsReply = false;
+    private String forwardedMessage;
+    private String forwardedImg;
+    private String forwardedMessageMessageSender;
+    private int forwardedMessageMessagePosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        replyLayout = findViewById(R.id.reply_layout);
+        txtQuotedMsg = findViewById(R.id.txtQuotedMsg);
+        tvSender = findViewById(R.id.tvSender);
+        ivQuotedMsg = findViewById(R.id.ivQuotedMsg);
         // Set default username is anonymous.
         mUsername = ANONYMOUS;
 
@@ -110,6 +130,35 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+        SwipeController controller = new SwipeController(this, new ISwipeControllerActions() {
+            @Override
+            public void onSwipePerformed(int position) {
+                reply(position);
+            }
+        });
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(controller);
+        itemTouchHelper.attachToRecyclerView(mMessageRecyclerView);
+    }
+
+    private void reply(int position) {
+        replyLayout.setVisibility(View.VISIBLE);
+        forwardedMessage = mFirebaseAdapter.getItem(position).getText();
+        forwardedImg = mFirebaseAdapter.getItem(position).getImageUrl();
+        forwardedMessageMessageSender = mFirebaseAdapter.getItem(position).getName();
+        forwardedMessageMessagePosition = position;
+
+        txtQuotedMsg.setText(forwardedMessage);
+        tvSender.setText(forwardedMessageMessageSender);
+
+        if (mFirebaseAdapter.getItem(position).getImageUrl() != null) {
+            ivQuotedMsg.setVisibility(View.VISIBLE);
+            Glide.with(MainActivity.this)
+                    .load(mFirebaseAdapter.getItem(position).getImageUrl())
+                    .into(ivQuotedMsg);
+        } else {
+            ivQuotedMsg.setVisibility(View.GONE);
+        }
+        messageIsReply = true;
     }
 
     public void onClick(View view) {
@@ -134,9 +183,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     friendlyMessage.setUid(mFirebaseUser.getUid());
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
                     mMessageEditText.setText("");
+                    replyLayout.setVisibility(View.GONE);
+                    ivQuotedMsg.setVisibility(View.GONE);
                 }
                 break;
         }
+    }
+
+    public void cancelReply(View view) {
+        replyLayout.setVisibility(View.GONE);
+        ivQuotedMsg.setVisibility(View.GONE);
     }
 
     @Override
