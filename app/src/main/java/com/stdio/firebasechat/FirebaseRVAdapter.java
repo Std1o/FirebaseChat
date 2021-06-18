@@ -1,5 +1,6 @@
 package com.stdio.firebasechat;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -28,11 +30,13 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
     FirebaseRecyclerOptions<FriendlyMessage> options;
     FirebaseUser mFirebaseUser;
     int highlightPosition = -1;
+    Activity activity;
 
-    public FirebaseRVAdapter(FirebaseRecyclerOptions<FriendlyMessage> options, FirebaseUser mFirebaseUser) {
+    public FirebaseRVAdapter(FirebaseRecyclerOptions<FriendlyMessage> options, FirebaseUser mFirebaseUser, Activity activity) {
         super(options);
         this.options = options;
         this.mFirebaseUser = mFirebaseUser;
+        this.activity = activity;
     }
 
     @Override
@@ -59,20 +63,13 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                 }
             }, 1000);
         }
+        setReplyLayoutClickListener(viewHolder.replyLayout, friendlyMessage);
+        setReplyLayoutClickListener(viewHolder.replyLayoutLeft, friendlyMessage);
+        showForwardedMessages(viewHolder, friendlyMessage);
         if (friendlyMessage.getText() != null) {
             if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
                 viewHolder.flMessage.setVisibility(TextView.VISIBLE);
                 viewHolder.tvMessage.setText(friendlyMessage.getText());
-                if (friendlyMessage.getForwardedMessage() != null) {
-                    showForwardedMessage(viewHolder, friendlyMessage);
-                }
-                viewHolder.replyLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        MainActivity.mMessageRecyclerView.smoothScrollToPosition(friendlyMessage.getForwardedMessagePosition());
-                        highlightPosition = friendlyMessage.getForwardedMessagePosition();
-                    }
-                });
             }
             else {
                 viewHolder.flMessageLeft.setVisibility(TextView.VISIBLE);
@@ -81,21 +78,36 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
         } else if (friendlyMessage.getImageUrl() != null) {
             boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
             if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
-                Glide.with(viewHolder.messageImageView.getContext())
+                Glide.with(activity)
                         .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
                         .apply(requestOptions)
                         .into(viewHolder.messageImageView);
                 viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
-                viewHolder.flImageLayout.setOnClickListener(view -> watchImage(friendlyMessage, viewHolder.messageImageView.getContext()));
+                viewHolder.flImageLayout.setOnClickListener(view -> watchImage(friendlyMessage));
             }
             else {
-                Glide.with(viewHolder.messageImageView.getContext())
+                Glide.with(activity)
                         .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
                         .apply(requestOptions)
                         .into(viewHolder.messageImageViewLeft);
                 viewHolder.flImageLayoutLeft.setVisibility(ImageView.VISIBLE);
-                viewHolder.flImageLayoutLeft.setOnClickListener(view -> watchImage(friendlyMessage, viewHolder.messageImageView.getContext()));
+                viewHolder.flImageLayoutLeft.setOnClickListener(view -> watchImage(friendlyMessage));
             }
+        }
+    }
+
+    private void showForwardedMessages(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage) {
+        if (friendlyMessage.getForwardedMessage() != null) {
+            showForwardedMessage(viewHolder, friendlyMessage);
+        }
+        if (friendlyMessage.getForwardedMessage() != null) {
+            showForwardedMessageLeft(viewHolder, friendlyMessage);
+        }
+        if (friendlyMessage.getForwardedImg() != null) {
+            showForwardedImg(viewHolder, friendlyMessage);
+        }
+        if (friendlyMessage.getForwardedImg() != null) {
+            showForwardedImgLeft(viewHolder, friendlyMessage);
         }
     }
 
@@ -113,6 +125,34 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
         viewHolder.ivQuotedMsgLeft.setVisibility(View.GONE);
     }
 
+    private void showForwardedImg(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage) {
+        viewHolder.replyLayout.setVisibility(View.VISIBLE);
+        viewHolder.tvSender.setText(friendlyMessage.getForwardedMessageSender());
+        viewHolder.ivQuotedMsg.setVisibility(View.VISIBLE);
+        Glide.with(activity)
+                .load(friendlyMessage.getForwardedImg())
+                .into(viewHolder.ivQuotedMsg);
+    }
+
+    private void showForwardedImgLeft(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage) {
+        viewHolder.replyLayoutLeft.setVisibility(View.VISIBLE);
+        viewHolder.tvSenderLeft.setText(friendlyMessage.getForwardedMessageSender());
+        viewHolder.ivQuotedMsgLeft.setVisibility(View.VISIBLE);
+        Glide.with(activity)
+                .load(friendlyMessage.getForwardedImg())
+                .into(viewHolder.ivQuotedMsgLeft);
+    }
+
+    private void setReplyLayoutClickListener(RelativeLayout relativeLayout, FriendlyMessage friendlyMessage) {
+        relativeLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.mMessageRecyclerView.smoothScrollToPosition(friendlyMessage.getForwardedMessagePosition());
+                highlightPosition = friendlyMessage.getForwardedMessagePosition();
+            }
+        });
+    }
+
     // override getItemId and getItemViewType to fix "RecyclerView items duplicate and constantly changing"
     @Override
     public long getItemId(int position) {
@@ -124,9 +164,9 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
         return position;
     }
 
-    private void watchImage(FriendlyMessage friendlyMessage, Context context) {
+    private void watchImage(FriendlyMessage friendlyMessage) {
         boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
-        final Dialog dialog = new Dialog(context, R.style.edit_AlertDialog_style);
+        final Dialog dialog = new Dialog(activity, R.style.edit_AlertDialog_style);
         dialog.setContentView(R.layout.image_dialog);
 
 
@@ -138,7 +178,7 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                 dialog.cancel();
             }
         });
-        Glide.with(context)
+        Glide.with(activity)
                 .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
                 .apply(new RequestOptions()
                         .placeholder(R.drawable.progress_animation))

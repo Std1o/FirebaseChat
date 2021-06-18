@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         FirebaseRecyclerOptions<FriendlyMessage> options = new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
                 .setQuery(messagesRef, parser)
                 .build();
-        mFirebaseAdapter = new FirebaseRVAdapter(options, mFirebaseUser);
+        mFirebaseAdapter = new FirebaseRVAdapter(options, mFirebaseUser, this);
 
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
