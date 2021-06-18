@@ -7,12 +7,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,8 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
@@ -39,13 +33,14 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.stdio.firebasechat.models.FriendlyMessage;
 
 import static com.stdio.firebasechat.Constants.LOADING_IMAGE_URL;
+import static com.stdio.firebasechat.Constants.MESSAGES_CHILD;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
-    public static final String MESSAGES_CHILD = "messages";
     private static final int REQUEST_IMAGE = 2;
     public static final String ANONYMOUS = "anonymous";
     private String mUsername;
@@ -56,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
     private FirebaseUser mFirebaseUser;
     private DatabaseReference mFirebaseDatabaseReference;
     private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
-    ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,8 +163,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        // An unresolvable error has occurred and Google APIs (including Sign-In) will not
-        // be available.
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
         Toast.makeText(this, "Google Play Services error.", Toast.LENGTH_SHORT).show();
     }
@@ -199,8 +191,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                                             .getReference(mFirebaseUser.getUid())
                                             .child(key)
                                             .child(uri.getLastPathSegment());
-
-                                    putImageInStorage(storageReference, uri, key);
+                                    ImageUploader imageUploader = new ImageUploader(mFirebaseDatabaseReference, MainActivity.this, mFirebaseUser);
+                                    imageUploader.putImageInStorage(storageReference, uri, key);
                                 } else {
                                     Log.w(TAG, "Unable to write message to database.",
                                             databaseError.toException());
@@ -209,64 +201,5 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                         });
             }
         }
-    }
-
-    private void showProgressDialog(final String key, final UploadTask uploadTask) {
-        dialog = new ProgressDialog(this);
-        dialog.setTitle("Загрузка изображения...");
-        dialog.setCancelable(false);
-        dialog.setButton(Dialog.BUTTON_POSITIVE, "Отмена", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key).removeValue();
-                uploadTask.cancel();
-            }
-        });
-        dialog.show();
-    }
-
-    private void putImageInStorage(StorageReference storageReference, Uri uri, final String key) {
-        final UploadTask uploadTask = storageReference.putFile(uri);
-        showProgressDialog(key, uploadTask);
-        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onProgress(@NonNull UploadTask.TaskSnapshot taskSnapshot) {
-                final double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot.getTotalByteCount());
-                Log.i("Load","Upload is " + String.format("%.1f", progress) + "% done");
-                Runnable changeMessage = new Runnable() {
-                    @Override
-                    public void run() {
-                        //Log.v(TAG, strCharacters);
-                        dialog.setMessage(String.format("%.1f", progress) + "% done");
-                    }
-                };
-                runOnUiThread(changeMessage);
-            }
-        }).addOnCompleteListener(this,
-                new OnCompleteListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-                        if (task.isSuccessful()) {
-                            task.getResult().getMetadata().getReference().getDownloadUrl()
-                                    .addOnCompleteListener(MainActivity.this,
-                                            new OnCompleteListener<Uri>() {
-                                                @Override
-                                                public void onComplete(@NonNull Task<Uri> task) {
-                                                    if (task.isSuccessful()) {
-                                                        FriendlyMessage friendlyMessage =
-                                                                new FriendlyMessage(null, mUsername, mPhotoUrl,
-                                                                        task.getResult().toString());
-                                                        friendlyMessage.setUid(mFirebaseUser.getUid());
-                                                        mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key)
-                                                                .setValue(friendlyMessage);
-                                                        dialog.cancel();
-                                                    }
-                                                }
-                                            });
-                        } else {
-                            Log.w(TAG, "Image upload task was not successful.",
-                                    task.getException());
-                        }
-                    }
-                });
     }
 }
