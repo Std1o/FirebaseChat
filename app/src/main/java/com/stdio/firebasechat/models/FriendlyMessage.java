@@ -8,6 +8,10 @@ public class FriendlyMessage {
     private String photoUrl;
     private String imageUrl;
     private String uid;
+    private String forwardedMessage;
+    private String forwardedImg;
+    private String forwardedMessageSender;
+    private int forwardedMessagePosition;
 
     public FriendlyMessage() {
     }
@@ -65,5 +69,37 @@ public class FriendlyMessage {
 
     public void setUid(String uid) {
         this.uid = uid;
+    }
+
+    public String getForwardedMessage() {
+        return forwardedMessage;
+    }
+
+    public void setForwardedMessage(String forwardedMessage) {
+        this.forwardedMessage = forwardedMessage;
+    }
+
+    public String getForwardedImg() {
+        return forwardedImg;
+    }
+
+    public void setForwardedImg(String forwardedImg) {
+        this.forwardedImg = forwardedImg;
+    }
+
+    public String getForwardedMessageSender() {
+        return forwardedMessageSender;
+    }
+
+    public void setForwardedMessageSender(String forwardedMessageSender) {
+        this.forwardedMessageSender = forwardedMessageSender;
+    }
+
+    public int getForwardedMessagePosition() {
+        return forwardedMessagePosition;
+    }
+
+    public void setForwardedMessagePosition(int forwardedMessagePosition) {
+        this.forwardedMessagePosition = forwardedMessagePosition;
     }
 }

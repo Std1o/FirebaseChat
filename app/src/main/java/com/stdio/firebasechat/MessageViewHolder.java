@@ -13,9 +13,12 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
     TextView tvMessageLeft;
     FrameLayout flMessage, flMessageLeft, flImageLayout, flImageLayoutLeft;
     ImageView messageImageView, messageImageViewLeft;
-    RelativeLayout reply_layout;
+    RelativeLayout replyLayout;
     TextView txtQuotedMsg, tvSender;
     ImageView ivQuotedMsg;
+    RelativeLayout replyLayoutLeft;
+    TextView txtQuotedMsgLeft, tvSenderLeft;
+    ImageView ivQuotedMsgLeft;
 
     public MessageViewHolder(View v) {
         super(v);
@@ -27,5 +30,15 @@ public class MessageViewHolder extends RecyclerView.ViewHolder {
         flImageLayoutLeft = itemView.findViewById(R.id.imageLayoutLeft);
         messageImageView = itemView.findViewById(R.id.imageView);
         messageImageViewLeft = itemView.findViewById(R.id.imageViewLeft);
+
+        replyLayout = itemView.findViewById(R.id.replyLayout);
+        txtQuotedMsg = itemView.findViewById(R.id.txtQuotedMsg);
+        tvSender = itemView.findViewById(R.id.tvSender);
+        ivQuotedMsg = itemView.findViewById(R.id.ivQuotedMsg);
+
+        replyLayoutLeft = itemView.findViewById(R.id.replyLayoutLeft);
+        txtQuotedMsgLeft = itemView.findViewById(R.id.txtQuotedMsgLeft);
+        tvSenderLeft = itemView.findViewById(R.id.tvSenderLeft);
+        ivQuotedMsgLeft = itemView.findViewById(R.id.ivQuotedMsgLeft);
     }
 }

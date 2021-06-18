@@ -181,6 +181,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
                     FriendlyMessage friendlyMessage = new
                             FriendlyMessage(message, mUsername, mPhotoUrl, null);
                     friendlyMessage.setUid(mFirebaseUser.getUid());
+
+                    if (messageIsReply) {
+                        friendlyMessage.setForwardedMessage(forwardedMessage);
+                        friendlyMessage.setForwardedImg(forwardedImg);
+                        friendlyMessage.setForwardedMessageSender(forwardedMessageMessageSender);
+                        friendlyMessage.setForwardedMessagePosition(forwardedMessageMessagePosition);
+
+                        forwardedMessage = null;
+                        forwardedImg = null;
+                        forwardedMessageMessageSender = null;
+                        forwardedMessageMessagePosition = -1;
+                        messageIsReply = false;
+                    }
+
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
                     mMessageEditText.setText("");
                     replyLayout.setVisibility(View.GONE);

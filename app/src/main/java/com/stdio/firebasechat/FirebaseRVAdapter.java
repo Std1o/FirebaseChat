@@ -50,6 +50,9 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
             if (friendlyMessage.getUid().equals(mFirebaseUser.getUid())) {
                 viewHolder.flMessage.setVisibility(TextView.VISIBLE);
                 viewHolder.tvMessage.setText(friendlyMessage.getText());
+                if (friendlyMessage.getForwardedMessage() != null) {
+                    showForwardedMessage(viewHolder, friendlyMessage);
+                }
             }
             else {
                 viewHolder.flMessageLeft.setVisibility(TextView.VISIBLE);
@@ -74,6 +77,20 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                 viewHolder.flImageLayoutLeft.setOnClickListener(view -> watchImage(friendlyMessage, viewHolder.messageImageView.getContext()));
             }
         }
+    }
+
+    private void showForwardedMessage(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage) {
+        viewHolder.replyLayout.setVisibility(View.VISIBLE);
+        viewHolder.txtQuotedMsg.setText(friendlyMessage.getForwardedMessage());
+        viewHolder.tvSender.setText(friendlyMessage.getForwardedMessageSender());
+        viewHolder.ivQuotedMsg.setVisibility(View.GONE);
+    }
+
+    private void showForwardedMessageLeft(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage) {
+        viewHolder.replyLayoutLeft.setVisibility(View.VISIBLE);
+        viewHolder.txtQuotedMsgLeft.setText(friendlyMessage.getForwardedMessage());
+        viewHolder.tvSenderLeft.setText(friendlyMessage.getForwardedMessageSender());
+        viewHolder.ivQuotedMsgLeft.setVisibility(View.GONE);
     }
 
     // override getItemId and getItemViewType to fix "RecyclerView items duplicate and constantly changing"
