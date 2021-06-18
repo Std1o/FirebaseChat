@@ -1,8 +1,14 @@
 package com.stdio.firebasechat;
 
+import android.app.Dialog;
+import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -11,6 +17,8 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseUser;
 import com.stdio.firebasechat.models.FriendlyMessage;
+
+import it.sephiroth.android.library.imagezoom.ImageViewTouch;
 
 import static com.stdio.firebasechat.Constants.LOADING_IMAGE_URL;
 
@@ -55,6 +63,7 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                         .apply(requestOptions)
                         .into(viewHolder.messageImageView);
                 viewHolder.flImageLayout.setVisibility(ImageView.VISIBLE);
+                viewHolder.flImageLayout.setOnClickListener(view -> watchImage(friendlyMessage, viewHolder.messageImageView.getContext()));
             }
             else {
                 Glide.with(viewHolder.messageImageView.getContext())
@@ -62,6 +71,7 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
                         .apply(requestOptions)
                         .into(viewHolder.messageImageViewLeft);
                 viewHolder.flImageLayoutLeft.setVisibility(ImageView.VISIBLE);
+                viewHolder.flImageLayoutLeft.setOnClickListener(view -> watchImage(friendlyMessage, viewHolder.messageImageView.getContext()));
             }
         }
     }
@@ -75,6 +85,35 @@ public class FirebaseRVAdapter extends FirebaseRecyclerAdapter<FriendlyMessage, 
     @Override
     public int getItemViewType(int position) {
         return position;
+    }
+
+    private void watchImage(FriendlyMessage friendlyMessage, Context context) {
+        boolean imageIsNotLoaded = friendlyMessage.getImageUrl().equals(LOADING_IMAGE_URL);
+        final Dialog dialog = new Dialog(context, R.style.edit_AlertDialog_style);
+        dialog.setContentView(R.layout.image_dialog);
+
+
+        final ImageViewTouch imageView = dialog.findViewById(R.id.start_img);
+        LinearLayout place = dialog.findViewById(R.id.place);
+        place.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.cancel();
+            }
+        });
+        Glide.with(context)
+                .load((imageIsNotLoaded) ? R.drawable.progress_animation : friendlyMessage.getImageUrl())
+                .apply(new RequestOptions()
+                        .placeholder(R.drawable.progress_animation))
+                .into(imageView);
+        dialog.show();
+
+        dialog.setCanceledOnTouchOutside(true); // Sets whether this dialog is
+        Window w = dialog.getWindow();
+        WindowManager.LayoutParams lp = w.getAttributes();
+        lp.x = 0;
+        lp.y = 40;
+        dialog.onWindowAttributesChanged(lp);
     }
 
     private void hideAllItemLayouts(MessageViewHolder viewHolder) {
