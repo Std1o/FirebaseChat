@@ -17,8 +17,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
-import com.capybaralabs.swipetoreply.ISwipeControllerActions;
-import com.capybaralabs.swipetoreply.SwipeController;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
@@ -33,6 +31,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.stdio.firebasechat.models.FriendlyMessage;
+import com.stdio.swipetoreply.ISwipeControllerActions;
+import com.stdio.swipetoreply.SwipeController;
+
 import static com.stdio.firebasechat.Constants.LOADING_IMAGE_URL;
 import static com.stdio.firebasechat.Constants.MESSAGES_CHILD;
 
